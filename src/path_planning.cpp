@@ -113,7 +113,7 @@ public:
 		bounds.setHigh(0,20);
 		bounds.setLow(1,-20);
 		bounds.setHigh(1,20);
-		bounds.setLow(2,0);
+		bounds.setLow(2,-1);
 		bounds.setHigh(2,20);
 
 		space->as<ob::SE3StateSpace>()->setBounds(bounds);
@@ -210,7 +210,7 @@ public:
 			trajectory_msgs::MultiDOFJointTrajectoryPoint point_msg;
 
 			msg.header.stamp = ros::Time::now();
-			msg.header.frame_id = "world";
+			msg.header.frame_id = "map";
 			msg.joint_names.clear();
 			msg.points.clear();
 			msg.joint_names.push_back("Quadcopter");
@@ -269,7 +269,7 @@ public:
 	            // extract the second component of the state and cast it to what we expect
 				const ob::SO3StateSpace::StateType *rot = se3state->as<ob::SO3StateSpace::StateType>(1);
 				
-				marker.header.frame_id = "world";
+				marker.header.frame_id = "map";
 				marker.header.stamp = ros::Time();
 				marker.ns = "path";
 				marker.id = idx;
@@ -375,7 +375,7 @@ private:
 
 void octomapCallback(const octomap_msgs::Octomap::ConstPtr &msg, planner* planner_ptr)
 {
-
+	//ROS_INFO("octomap callback");
 
     //loading octree from binary
 	 // const std::string filename = "/home/rrc/power_plant.bt";
@@ -395,6 +395,7 @@ void octomapCallback(const octomap_msgs::Octomap::ConstPtr &msg, planner* planne
 
 void odomCb(const nav_msgs::Odometry::ConstPtr &msg, planner* planner_ptr)
 {
+	//ROS_INFO("odom callback");
 	planner_ptr->setStart(msg->pose.pose.position.x, msg->pose.pose.position.y, msg->pose.pose.position.z);
 	planner_ptr->init_start();
 }
@@ -424,7 +425,9 @@ int main(int argc, char **argv)
 	vis_pub = n.advertise<visualization_msgs::Marker>( "visualization_marker", 0 );
 	traj_pub = n.advertise<trajectory_msgs::MultiDOFJointTrajectory>("waypoints",1);
 	
-	std::cout << "OMPL version: " << OMPL_VERSION << std::endl;
+	std::cout << "OMPL version: " << OMPL_MAJOR_VERSION << 
+		"." << OMPL_MINOR_VERSION << 
+		"." << OMPL_PATCH_VERSION << std::endl;
 
 	ros::spin();
 
