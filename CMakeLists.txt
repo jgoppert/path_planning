@@ -1,15 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(path_planning)
-set (CMAKE_CXX_STANDARD 11)
+
 ## Add support for C++11, supported in ROS Kinetic and newer
-# add_definitions(-std=c++11)
+#add_definitions(-std=c++14)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(octomap REQUIRED)
-find_package(fcl REQUIRED)
-find_package(OMPL REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
   octomap_msgs
@@ -18,7 +15,11 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   roscpp
   std_msgs
+  ompl
+  fcl_catkin
 )
+
+find_package(octomap REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -126,14 +127,10 @@ catkin_package(
 include_directories(
   ${PROJECT_SOURCE_DIR}/include
   ${catkin_INCLUDE_DIRS}
-  ${PCL_INCLUDE_DIRS}
   ${OCTOMAP_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIR}
   ${OMPL_INCLUDE_DIRS}
-  ${fcl_INCLUDE_DIRS}
 )
-
-link_libraries(${OCTOMAP_LIBRARIES} ${fcl_LIBRARY_DIRS} ${OMPL_LIBRARY_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -149,7 +146,7 @@ link_libraries(${OCTOMAP_LIBRARIES} ${fcl_LIBRARY_DIRS} ${OMPL_LIBRARY_DIRS})
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(${PROJECT_NAME}_node src/path_planning.cpp)
-add_executable(old_path_planning src/old_path_planning.cpp)
+#add_executable(old_path_planning src/old_path_planning.cpp)
 add_executable(traj_gen src/trajectory_generator.cpp)
 add_executable(scale src/scaling.cpp)
 add_executable(goal_transform src/goalpoint_transformer.cpp)
@@ -166,22 +163,14 @@ add_executable(transform_pointcloud src/transform.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
+   ccd
    ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
-   ${OCTOMAP_LIBRARIES}
-   ${fcl_LIBRARIES}
    ${OMPL_LIBRARIES}
-   fcl
 )
 
-target_link_libraries(old_path_planning
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
-   ${OCTOMAP_LIBRARIES}
-   ${fcl_LIBRARIES}
-   ${OMPL_LIBRARIES}
-   fcl
-)
+#target_link_libraries(old_path_planning
+   #${catkin_LIBRARIES}
+#)
 
 target_link_libraries(traj_gen
    ${catkin_LIBRARIES}

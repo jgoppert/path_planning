@@ -37,11 +37,11 @@
 #include <iostream>
 
 #include "fcl/config.h"
-#include "fcl/octree.h"
-#include "fcl/traversal/traversal_node_octree.h"
-#include "fcl/collision.h"
-#include "fcl/broadphase/broadphase.h"
-#include "fcl/math/transform.h"
+#include "fcl/geometry/octree/octree.h"
+//#include "fcl/traversal/traversal_node_octree.h"
+#include "fcl/narrowphase/collision.h"
+//#include "fcl/broadphase/broadphase.h"
+//#include "fcl/math/transform.h"
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
@@ -87,16 +87,16 @@ public:
 			
 		}
 	}
-	void updateMap(std::shared_ptr<fcl::CollisionGeometry> map)
+	void updateMap(std::shared_ptr<fcl::CollisionGeometry<double>> map)
 	{
 		tree_obj = map;
 	}
 	// Constructor
 	planner(void)
 	{
-		Quadcopter = std::shared_ptr<fcl::CollisionGeometry>(new fcl::Box(0.3, 0.3, 0.1));
-		fcl::OcTree* tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(new octomap::OcTree(0.1)));
-		tree_obj = std::shared_ptr<fcl::CollisionGeometry>(tree);
+		Quadcopter = std::shared_ptr<fcl::CollisionGeometry<double>>(new fcl::Box<double>(0.3, 0.3, 0.1));
+		fcl::OcTree<double>* tree = new fcl::OcTree<double>(std::shared_ptr<const octomap::OcTree>(new octomap::OcTree(0.1)));
+		tree_obj = std::shared_ptr<fcl::CollisionGeometry<double>>(tree);
 		
 		space = ob::StateSpacePtr(new ob::SE3StateSpace());
 
@@ -320,9 +320,9 @@ private:
 
 	bool replan_flag = false;
 
-	std::shared_ptr<fcl::CollisionGeometry> Quadcopter;
+	std::shared_ptr<fcl::CollisionGeometry<double>> Quadcopter;
 
-	std::shared_ptr<fcl::CollisionGeometry> tree_obj;
+	std::shared_ptr<fcl::CollisionGeometry<double>> tree_obj;
 
 	// Flag for initialization
 	bool set_start = false;
@@ -338,15 +338,15 @@ private:
 	    // extract the second component of the state and cast it to what we expect
 		const ob::SO3StateSpace::StateType *rot = se3state->as<ob::SO3StateSpace::StateType>(1);
 
-		fcl::CollisionObject treeObj((tree_obj));
-		fcl::CollisionObject aircraftObject(Quadcopter);
+		fcl::CollisionObject<double> treeObj((tree_obj));
+		fcl::CollisionObject<double> aircraftObject(Quadcopter);
 
 	    // check validity of state defined by pos & rot
-		fcl::Vec3f translation(pos->values[0],pos->values[1],pos->values[2]);
-		fcl::Quaternion3f rotation(rot->w, rot->x, rot->y, rot->z);
+		fcl::Vector3d translation(pos->values[0],pos->values[1],pos->values[2]);
+		fcl::Quaterniond rotation(rot->w, rot->x, rot->y, rot->z);
 		aircraftObject.setTransform(rotation, translation);
-		fcl::CollisionRequest requestType(1,false,1,false);
-		fcl::CollisionResult collisionResult;
+		fcl::CollisionRequest<double> requestType(1,false,1,false);
+		fcl::CollisionResult<double> collisionResult;
 		fcl::collide(&aircraftObject, &treeObj, requestType, collisionResult);
 
 		return(!collisionResult.isCollision());
@@ -386,10 +386,10 @@ void octomapCallback(const octomap_msgs::Octomap::ConstPtr &msg, planner* planne
 
 	// convert octree to collision object
 	octomap::OcTree* tree_oct = dynamic_cast<octomap::OcTree*>(octomap_msgs::msgToMap(*msg));
-	fcl::OcTree* tree = new fcl::OcTree(std::shared_ptr<const octomap::OcTree>(tree_oct));
+	fcl::OcTree<double>* tree = new fcl::OcTree<double>(std::shared_ptr<const octomap::OcTree>(tree_oct));
 	
 	// Update the octree used for collision checking
-	planner_ptr->updateMap(std::shared_ptr<fcl::CollisionGeometry>(tree));
+	planner_ptr->updateMap(std::shared_ptr<fcl::CollisionGeometry<double>>(tree));
 	planner_ptr->replan();
 }
 
